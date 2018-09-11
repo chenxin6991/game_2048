@@ -186,6 +186,27 @@ int http_request_proc(http_request* request)
     return 0;
 }
 
+
+// 处理各种状态码
+void status_code_proc(http_request* request)
+{
+    if (request == NULL) {
+        return;
+    }
+
+    switch (request->status_code) {
+    case 200:
+        break;
+    case 304:
+        break;
+    case 404:
+        return_html()
+        break;
+    default:
+        break;
+    }
+}
+
 void* pthread_proc(void* arg)
 {
     int64_t new_fd = (int64_t)arg;
@@ -204,6 +225,12 @@ void* pthread_proc(void* arg)
     }
 
     ret = http_request_proc(&request);
+    if (ret < 0) {
+        perror("http_request_proc");
+        request.status_code = 404;
+    }
+
+    status_code_proc(&request);
     return NULL;
 }
 
