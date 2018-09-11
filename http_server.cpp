@@ -33,3 +33,8 @@ int http_server::accept_proc(struct sockaddr* client_addr, socklen_t* len)
 {
     return accept(_listen_fd, client_addr, len);
 }
+
+int http_server::firstline_proc(int sock_fd)
+{
+    return 0;
+}
