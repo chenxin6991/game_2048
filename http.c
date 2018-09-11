@@ -99,16 +99,10 @@ int firstline_proc(int64_t sock_fd, http_request* request)
     }
 
     request->method = tok[0];
-    //request->url = tok[1];
+    request->url = tok[1];
     request->protocol_version = tok[2];
 
-    char buff[100] = {0};
-    //strcpy(buff, "http://job.xjtu.edu.cn/company/Login/do/what.html?a=10&b=20");
-    //strcpy(buff, "http://job.xjtu.edu.cn/");
-    //strcpy(buff, "/hello/world/index.html?a=19");
-    strcpy(buff, "http://39.107.128.235/hello/world/index.html?a=19");
-    request->url = buff;
-
+    // 处理查询字符串
     char* purl = request->url;
     request->url_path = request->url;
     request->query_str = NULL;
@@ -121,38 +115,28 @@ int firstline_proc(int64_t sock_fd, http_request* request)
         ++purl;
     }
 
-    char* saveptr = NULL;
-    char* pcur = NULL;
-    pcur = strtok_r(request->url, ":", &saveptr);
-    if (strcmp(pcur, request->url) != 0) {
-        request->domain_name = NULL;
-        pcur = pcur + strlen(pcur) + 3;
-        request->domain_name = pcur;
-        char* p = pcur;
-        while (*p != '\0' && *p != '/') {
-            ++p;
-        }
-        *p = '\0';
-        if (*(p + 1) == '\0') {
-            *(p + 1) = '/';
-        }
-        request->url_path = p + 1;
-    }
+    // 处理带有域名的URL
+    const char* http_str = "http://";
+    const char* https_str = "https://";
 
-    if (request->method != NULL) {
-        printf("request->method: %s\n", request->method);
-    }
-    if (request->url_path != NULL) {
-        printf("request->url_path: %s\n", request->url_path);
-    }
-    if (request->query_str != NULL) {
-        printf("request->query_str: %s\n", request->query_str);
-    }
-    if (request->domain_name != NULL) {
-        printf("request->domain_name: %s\n", request->domain_name);
-    }
-    if (request->protocol_version != NULL) {
-        printf("request->protocol_version: %s\n", request->protocol_version);
+    char* p1 = strstr(request->url, http_str);
+    char* p2 = strstr(request->url, http_str);
+    if (p1 != NULL || p2 != NULL) {
+        char* cur = NULL;
+        if (p1 != NULL) {
+            cur = p1 + strlen(http_str);
+        } else {
+            cur = p2 + strlen(https_str);
+        }
+        request->domain_name = cur;
+        while (*cur != '\0' && *cur != '/') {
+            ++cur;
+        }
+        *cur++ = '\0';
+        if (*cur == '\0') {
+            *cur = '/';
+        }
+        request->url_path = cur;
     }
 
     return 0;
