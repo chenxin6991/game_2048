@@ -99,28 +99,18 @@ int firstline_proc(int64_t sock_fd, http_request* request)
     }
 
     request->method = tok[0];
-    request->url = tok[1];
-
-    // 处理有域名的情况
-    //char* saveptr = NULL;
-    //char* pcur = NULL;
-    //pcur = strtok_r(request->url, "/", &saveptr);
-    //if (pcur != NULL) {
-    //    
-    //}
-
-
-    char test_buff[100] = {0};
-    strcpy(test_buff, "http://job.xjtu.edu.cn/company/Login/do/what.html");
-    char* saveptr = NULL;
-    char* pcur = NULL;
-    pcur = strtok_r(test_buff, ":", &saveptr);
-    if (pcur != NULL) {
-        
-    }
+    //request->url = tok[1];
     request->protocol_version = tok[2];
 
+    char buff[100] = {0};
+    //strcpy(buff, "http://job.xjtu.edu.cn/company/Login/do/what.html?a=10&b=20");
+    //strcpy(buff, "http://job.xjtu.edu.cn/");
+    //strcpy(buff, "/hello/world/index.html?a=19");
+    strcpy(buff, "http://39.107.128.235/hello/world/index.html?a=19");
+    request->url = buff;
+
     char* purl = request->url;
+    request->url_path = request->url;
     request->query_str = NULL;
     while (*purl != '\0') {
         if (*purl == '\?') {
@@ -129,6 +119,40 @@ int firstline_proc(int64_t sock_fd, http_request* request)
             break;
         }
         ++purl;
+    }
+
+    char* saveptr = NULL;
+    char* pcur = NULL;
+    pcur = strtok_r(request->url, ":", &saveptr);
+    if (strcmp(pcur, request->url) != 0) {
+        request->domain_name = NULL;
+        pcur = pcur + strlen(pcur) + 3;
+        request->domain_name = pcur;
+        char* p = pcur;
+        while (*p != '\0' && *p != '/') {
+            ++p;
+        }
+        *p = '\0';
+        if (*(p + 1) == '\0') {
+            *(p + 1) = '/';
+        }
+        request->url_path = p + 1;
+    }
+
+    if (request->method != NULL) {
+        printf("request->method: %s\n", request->method);
+    }
+    if (request->url_path != NULL) {
+        printf("request->url_path: %s\n", request->url_path);
+    }
+    if (request->query_str != NULL) {
+        printf("request->query_str: %s\n", request->query_str);
+    }
+    if (request->domain_name != NULL) {
+        printf("request->domain_name: %s\n", request->domain_name);
+    }
+    if (request->protocol_version != NULL) {
+        printf("request->protocol_version: %s\n", request->protocol_version);
     }
 
     return 0;
